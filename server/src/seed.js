@@ -1,19 +1,17 @@
 // Fills the database with demo anglers and catches (no photos): `npm run seed`
-import bcrypt from 'bcryptjs';
 import { db, transaction } from './db.js';
 import { SPECIES } from './config.js';
 import { computeScore } from './lib/scoring.js';
 
 const names = ['reelmckoy', 'bassmaster_beth', 'troutbum', 'lakeside_lou', 'pike_and_pine', 'catfish_kate'];
-const hash = bcrypt.hashSync('password123', 10);
 const rand = (a, b) => a + Math.random() * (b - a);
 
 transaction(() => {
   for (const username of names) {
     if (db.prepare('SELECT 1 FROM users WHERE username = ?').get(username)) continue;
     const { lastInsertRowid: uid } = db
-      .prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)')
-      .run(username, hash);
+      .prepare('INSERT INTO users (username) VALUES (?)')
+      .run(username);
     const n = Math.floor(rand(6, 16));
     for (let i = 0; i < n; i++) {
       const sp = SPECIES[Math.floor(Math.random() * (SPECIES.length - 1))];
@@ -32,4 +30,4 @@ transaction(() => {
     }
   }
 });
-console.log(`Seeded demo anglers (password: password123): ${names.join(', ')}`);
+console.log(`Seeded demo anglers: ${names.join(', ')}`);

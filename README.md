@@ -10,7 +10,7 @@ Requires **Node 22.13+** (Node 24 LTS recommended).
 
 ```bash
 npm install
-npm run seed   # optional: demo anglers + catches (password: password123)
+npm run seed   # optional: demo anglers + catches
 npm run dev    # API on :3001, web on http://localhost:5173
 ```
 
@@ -18,8 +18,8 @@ The dev server is exposed on your network, so you can open `http://<your-compute
 
 Production: `npm run build && npm start` — Express serves the built app and API together on http://localhost:3001.
 
-Data (database, uploaded photos, JWT secret) lives in `server/data/`. Set `JWT_SECRET`, `PORT`, `DATA_DIR`,
-`COOKIE_SECURE=true` (when served over HTTPS) and `TRUST_PROXY` (when behind a proxy) as environment variables.
+Data (database and uploaded photos) lives in `server/data/`. Set `PORT`, `DATA_DIR`
+and `TRUST_PROXY` (when behind a proxy) as environment variables.
 
 ## Changing the scoring
 
@@ -35,7 +35,7 @@ After changing scoring numbers, recompute existing catches with `npm run rescore
 server/src/
   config.js        scoring + game rules (edit me)
   db.js            SQLite schema: users, catches, scores
-  auth.js          signup/login/logout (bcrypt + JWT in an httpOnly cookie)
+  session.js       name-based identity (X-User-Id header, no passwords)
   routes/          catches (feed, log, delete), leaderboard, users (profile)
   lib/             scoring, week boundaries, leaderboard queries, photo storage
 client/src/

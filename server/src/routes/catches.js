@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { db, transaction } from '../db.js';
-import { requireAuth } from '../auth.js';
+import { requireAuth } from '../session.js';
 import { MAX_BACKDATE_DAYS, MAX_PHOTO_BYTES, REQUIRE_PHOTO, SPECIES, BASE_POINTS, SCORING } from '../config.js';
 import { checkMeasurements, computeScore } from '../lib/scoring.js';
 import { getCatch, listCatches } from '../lib/catches.js';

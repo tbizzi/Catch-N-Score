@@ -1,5 +1,11 @@
+export const USER_KEY = 'cns_user_id';
+
 async function request(path, { method = 'GET', body, form } = {}) {
   const init = { method, credentials: 'same-origin', headers: {} };
+  try {
+    const id = localStorage.getItem(USER_KEY);
+    if (id) init.headers['X-User-Id'] = id;
+  } catch { /* storage unavailable */ }
   if (form) {
     init.body = form;
   } else if (body) {
@@ -13,10 +19,8 @@ async function request(path, { method = 'GET', body, form } = {}) {
 }
 
 export const api = {
-  me: () => request('/auth/me'),
-  signup: (username, password) => request('/auth/signup', { method: 'POST', body: { username, password } }),
-  login: (username, password) => request('/auth/login', { method: 'POST', body: { username, password } }),
-  logout: () => request('/auth/logout', { method: 'POST' }),
+  me: () => request('/session'),
+  enterName: (name) => request('/session', { method: 'POST', body: { name } }),
   rules: () => request('/catches/species'),
   preview: (species, weight, length) =>
     request(`/catches/preview?${new URLSearchParams({ species, weight, length })}`),

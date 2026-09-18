@@ -1,10 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import express from 'express';
-import cookieParser from 'cookie-parser';
 import multer from 'multer';
 import './db.js';
-import { attachUser, authRouter } from './auth.js';
+import { attachUser, sessionRouter } from './session.js';
 import { catchesRouter } from './routes/catches.js';
 import { leaderboardRouter } from './routes/leaderboard.js';
 import { usersRouter } from './routes/users.js';
@@ -15,7 +14,6 @@ app.disable('x-powered-by');
 if (process.env.TRUST_PROXY) app.set('trust proxy', process.env.TRUST_PROXY);
 
 app.use(express.json({ limit: '100kb' }));
-app.use(cookieParser());
 app.use(attachUser);
 
 app.use(
@@ -27,7 +25,7 @@ app.use(
   }),
 );
 
-app.use('/api/auth', authRouter);
+app.use('/api/session', sessionRouter);
 app.use('/api/catches', catchesRouter);
 app.use('/api/leaderboard', leaderboardRouter);
 app.use('/api/users', usersRouter);

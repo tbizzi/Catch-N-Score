@@ -2,10 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api.js';
 import CatchCard from '../components/CatchCard.jsx';
-import { useAuth } from '../auth.jsx';
 
 export default function Feed() {
-  const { user } = useAuth();
   const [catches, setCatches] = useState([]);
   const [cursor, setCursor] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -41,7 +39,7 @@ export default function Feed() {
         <div className="card empty">
           <div className="empty-emoji">🎣</div>
           <p>No catches yet. Be the first on the board!</p>
-          <Link className="btn btn-primary" to={user ? '/log' : '/signup'}>{user ? 'Log a catch' : 'Sign up'}</Link>
+          <Link className="btn btn-primary" to="/log">Log a catch</Link>
         </div>
       )}
       {loading && <p className="center muted">Loading…</p>}

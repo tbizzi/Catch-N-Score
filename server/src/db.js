@@ -11,7 +11,6 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     username      TEXT NOT NULL UNIQUE COLLATE NOCASE,
-    password_hash TEXT NOT NULL,
     created_at    TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
   );
 
@@ -44,6 +43,11 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_scores_earned  ON scores(earned_at);
   CREATE INDEX IF NOT EXISTS idx_scores_user    ON scores(user_id);
 `);
+
+// Databases created before name-based identity still have a NOT NULL password column.
+if (db.prepare("SELECT 1 FROM pragma_table_info('users') WHERE name = 'password_hash'").get()) {
+  db.exec('ALTER TABLE users DROP COLUMN password_hash');
+}
 
 /** Run fn inside a transaction; rolls back if it throws. */
 export function transaction(fn) {
