@@ -1,0 +1,20 @@
+{
+  "name": "catch-n-score-server",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --no-warnings src/index.js",
+    "start": "node --no-warnings src/index.js",
+    "seed": "node --no-warnings src/seed.js",
+    "rescore": "node --no-warnings src/rescore.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.4.0"
+  }
+}
