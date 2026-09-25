@@ -1,0 +1,8 @@
+{
+  "name": "catch-n-score",
+  "compatibility_date": "2026-09-25",
+  "assets": {
+    "directory": "./client/dist",
+    "not_found_handling": "single-page-application"
+  }
+}
