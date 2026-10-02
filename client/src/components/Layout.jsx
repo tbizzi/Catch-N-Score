@@ -14,7 +14,7 @@ const icons = {
 };
 
 export default function Layout() {
-  const { user, switchUser } = useAuth();
+  const { user, signOut } = useAuth();
   return (
     <div className="app">
       <header className="topbar">
@@ -27,7 +27,7 @@ export default function Layout() {
           </nav>
           <div className="topbar-actions">
             <Link to="/log" className="btn btn-accent btn-sm desktop-only">+ Log a catch</Link>
-            <button className="btn btn-ghost btn-sm" onClick={switchUser}>Not {user.username}?</button>
+            <button className="btn btn-ghost btn-sm" onClick={signOut}>Log out</button>
           </div>
         </div>
       </header>

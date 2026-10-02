@@ -57,6 +57,9 @@ export default function Profile() {
 
   const { stats, personalBests: pb, catches } = data;
   const isMe = user?.id === data.user.id;
+  // Admins can delete any catch; RLS is the real enforcement, this just
+  // decides whether to show the button.
+  const canDelete = isMe || user?.is_admin;
 
   return (
     <div className="page">
@@ -117,7 +120,7 @@ export default function Profile() {
         </div>
       ) : (
         <div className="stack">
-          {catches.map((c) => <CatchCard key={c.id} catch={c} showAngler={false} onDelete={isMe ? remove : undefined} />)}
+          {catches.map((c) => <CatchCard key={c.id} catch={c} showAngler={false} onDelete={canDelete ? remove : undefined} />)}
         </div>
       )}
     </div>

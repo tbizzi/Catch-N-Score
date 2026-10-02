@@ -11,15 +11,12 @@
     "client"
   ],
   "scripts": {
-    "dev": "concurrently -n api,web -c blue,green \"npm run dev -w server\" \"npm run dev -w client\"",
+    "dev": "npm run dev -w client",
     "build": "npm run build -w client",
     "start": "npm run start -w server",
-    "seed": "npm run seed -w server",
-    "rescore": "npm run rescore -w server",
     "migrate:supabase": "node --no-warnings --env-file=.env scripts/migrate-to-supabase.js"
   },
   "devDependencies": {
-    "@supabase/supabase-js": "^2.117.2",
-    "concurrently": "^10.0.5"
+    "@supabase/supabase-js": "^2.117.2"
   }
 }

@@ -32,9 +32,9 @@ export default function Leaderboard() {
     let cancelled = false;
     setData(null);
     setError('');
-    api.leaderboard(kind).then((r) => !cancelled && setData(r)).catch((e) => !cancelled && setError(e.message));
+    api.leaderboard(kind, user?.id).then((r) => !cancelled && setData(r)).catch((e) => !cancelled && setError(e.message));
     return () => { cancelled = true; };
-  }, [kind]);
+  }, [kind, user?.id]);
 
   const meOutside = data?.me && !data.rows.some((r) => r.userId === data.me.userId);
 

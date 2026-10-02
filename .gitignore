@@ -2,3 +2,4 @@ node_modules
 client/dist
 server/data
 .env
+.env.local

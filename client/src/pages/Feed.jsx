@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api.js';
+import { useAuth } from '../auth.jsx';
 import CatchCard from '../components/CatchCard.jsx';
 
 export default function Feed() {
+  const { user } = useAuth();
   const [catches, setCatches] = useState([]);
   const [cursor, setCursor] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,6 +27,18 @@ export default function Feed() {
 
   useEffect(() => { load(null); }, [load]);
 
+  // Admins can delete any catch from the feed; RLS is the real enforcement —
+  // this button is just an affordance.
+  async function remove(c) {
+    if (!window.confirm(`Delete this ${c.species} by @${c.angler.username}? Its points will be removed.`)) return;
+    try {
+      await api.deleteCatch(c.id);
+      setCatches((prev) => prev.filter((x) => x.id !== c.id));
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
   return (
     <div className="page">
       <div className="page-head">
@@ -33,7 +47,7 @@ export default function Feed() {
       </div>
       {error && <p className="error">{error}</p>}
       <div className="stack">
-        {catches.map((c) => <CatchCard key={c.id} catch={c} />)}
+        {catches.map((c) => <CatchCard key={c.id} catch={c} onDelete={user.is_admin ? remove : undefined} />)}
       </div>
       {!loading && !error && catches.length === 0 && (
         <div className="card empty">

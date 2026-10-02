@@ -5,9 +5,5 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: true, // reachable from your phone on the same Wi-Fi
-    proxy: {
-      '/api': 'http://localhost:3001',
-      '/uploads': 'http://localhost:3001',
-    },
   },
 });

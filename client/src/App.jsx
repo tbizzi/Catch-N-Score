@@ -2,7 +2,9 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import { useAuth } from './auth.jsx';
 import Feed from './pages/Feed.jsx';
-import NamePage from './pages/NamePage.jsx';
+import AuthPage from './pages/AuthPage.jsx';
+import ForgotPassword from './pages/ForgotPassword.jsx';
+import ResetPassword from './pages/ResetPassword.jsx';
 import LogCatch from './pages/LogCatch.jsx';
 import Leaderboard from './pages/Leaderboard.jsx';
 import Profile from './pages/Profile.jsx';
@@ -13,9 +15,24 @@ function MyProfileRedirect() {
 }
 
 export default function App() {
-  const { user } = useAuth();
+  const { user, recovering } = useAuth();
+
   if (user === undefined) return <div className="center muted">Loading…</div>;
-  if (!user) return <NamePage />;
+
+  // Opening a "forgot password" email link signs the browser into a
+  // temporary recovery session, which would otherwise look like a normal
+  // sign-in below — always show the reset form instead until it's done.
+  if (recovering) return <ResetPassword />;
+
+  if (!user) {
+    return (
+      <Routes>
+        <Route path="/signup" element={<AuthPage mode="signup" />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="*" element={<AuthPage mode="login" />} />
+      </Routes>
+    );
+  }
 
   return (
     <Routes>

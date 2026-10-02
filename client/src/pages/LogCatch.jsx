@@ -48,14 +48,15 @@ export default function LogCatch() {
     setBusy(true);
     setError('');
     try {
-      const fd = new FormData();
-      fd.append('species', form.species);
-      fd.append('weightLbs', form.weight);
-      fd.append('lengthIn', form.length);
-      fd.append('caughtAt', new Date(form.caughtAt).toISOString());
-      fd.append('location', form.location);
-      if (photo) fd.append('photo', await resizeImage(photo), 'catch.jpg');
-      setResult((await api.logCatch(fd)).catch);
+      const fields = {
+        species: form.species,
+        weightLbs: Number(form.weight),
+        lengthIn: Number(form.length),
+        caughtAt: new Date(form.caughtAt).toISOString(),
+        location: form.location,
+        photo: photo ? await resizeImage(photo) : null,
+      };
+      setResult((await api.logCatch(fields, user.id)).catch);
     } catch (err) {
       setError(err.message);
     } finally {

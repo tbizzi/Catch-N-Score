@@ -4,14 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node --watch --no-warnings src/index.js",
-    "start": "node --no-warnings src/index.js",
-    "seed": "node --no-warnings src/seed.js",
-    "rescore": "node --no-warnings src/rescore.js"
+    "start": "node --no-warnings src/index.js"
   },
   "dependencies": {
-    "express": "^5.2.1",
-    "express-rate-limit": "^8.7.0",
-    "multer": "^2.4.0"
+    "express": "^5.2.1"
   }
 }
