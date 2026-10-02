@@ -30,6 +30,15 @@ create table if not exists profiles (
   created_at  timestamptz not null default now()
 );
 
+-- CREATE TABLE IF NOT EXISTS above is a no-op against a profiles table that
+-- already existed (e.g. from before is_admin existed) — these retrofit it.
+alter table profiles add column if not exists is_admin boolean not null default false;
+
+do $$ begin
+  alter table profiles add constraint profiles_username_format check (username ~ '^[A-Za-z0-9_]{3,20}$');
+exception when duplicate_object then null;
+end $$;
+
 -- Game rules — mirrors server/src/config.js's SPECIES + BASE_POINTS.
 create table if not exists species (
   name            text primary key,
@@ -88,6 +97,51 @@ create table if not exists catches (
   legacy_id   integer unique,
   created_at  timestamptz not null default now()
 );
+
+-- Same retrofit problem for a catches table that already existed: the
+-- species FK, the three CHECK constraints, and ON UPDATE CASCADE on user_id
+-- (needed for legacy profile reattachment at sign-up, see handle_new_user)
+-- are all no-ops above against a pre-existing table.
+do $$ begin
+  alter table catches add constraint catches_species_fkey foreign key (species) references species (name);
+exception when duplicate_object then null;
+end $$;
+
+do $$ begin
+  alter table catches add constraint catches_weight_lbs_check check (weight_lbs > 0);
+exception when duplicate_object then null;
+end $$;
+
+do $$ begin
+  alter table catches add constraint catches_length_in_check check (length_in > 0);
+exception when duplicate_object then null;
+end $$;
+
+do $$ begin
+  alter table catches add constraint catches_location_check check (location is null or char_length(location) <= 100);
+exception when duplicate_object then null;
+end $$;
+
+-- Replace whatever the user_id foreign key is currently named (found
+-- dynamically, rather than assumed) with one that has ON UPDATE CASCADE.
+do $$
+declare
+  fk_name text;
+begin
+  select tc.constraint_name into fk_name
+  from information_schema.table_constraints tc
+  join information_schema.key_column_usage kcu
+    on kcu.constraint_name = tc.constraint_name and kcu.table_schema = tc.table_schema
+  where tc.table_name = 'catches' and tc.constraint_type = 'FOREIGN KEY' and kcu.column_name = 'user_id'
+  limit 1;
+  if fk_name is not null then
+    execute format('alter table catches drop constraint %I', fk_name);
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'catches_user_id_fkey') then
+    alter table catches add constraint catches_user_id_fkey
+      foreign key (user_id) references profiles (id) on delete cascade on update cascade;
+  end if;
+end $$;
 
 create table if not exists scores (
   catch_id      bigint primary key references catches (id) on delete cascade,
@@ -283,6 +337,16 @@ create trigger trg_catches_validate before insert on catches
 drop trigger if exists trg_catches_compute_score on catches;
 create trigger trg_catches_compute_score after insert on catches
   for each row execute function catches_compute_score();
+
+-- The trigger above only fires on new inserts — it doesn't retroactively
+-- score catches that existed before it was created (e.g. migrated from the
+-- old SQLite backup). Backfill any catch that doesn't have a scores row yet;
+-- safe to re-run, only inserts where one is missing.
+insert into scores (catch_id, user_id, points, base, weight_bonus, length_bonus, earned_at)
+select c.id, c.user_id, s.total, s.base, s.weight_bonus, s.length_bonus, c.caught_at
+from catches c
+cross join lateral compute_score(c.species, c.weight_lbs, c.length_in) s
+where not exists (select 1 from scores sc where sc.catch_id = c.id);
 
 -- ── Read views (public to signed-in users; a view's own ORDER BY isn't
 -- guaranteed to survive a query against it, so callers should still specify
