@@ -49,18 +49,38 @@ function orderedLeaderboard(view) {
 }
 
 export const api = {
-  /** Public scoring rules, so the client can show species and a live score preview. */
+  /** Public scoring rules, so the client can show species (grouped by
+   * category/subgroup for the picker) and a live score preview. A
+   * dual-listed species (Striped Bass, King/Spanish Mackerel, Blacktip
+   * Shark) appears twice here, once per group it's picker-listed under —
+   * that's intentional, see species_picker in schema.sql. */
   async rules() {
-    const { data, error } = await supabase
-      .from('species')
-      .select('name, rarity, typical_weight, typical_length, base_points')
-      .order('base_points');
-    raise(error);
+    const mapRow = (s) => ({
+      name: s.name, rarity: s.rarity, basePoints: s.base_points,
+      typicalWeight: s.typical_weight, typicalLength: s.typical_length,
+      category: s.category ?? null, subgroup: s.subgroup ?? null,
+    });
+
+    const [{ data: picker, error: pickerError }, { data: other, error: otherError }] = await Promise.all([
+      supabase
+        .from('species_picker')
+        .select('category, subgroup, name, rarity, base_points, typical_weight, typical_length')
+        // Same caveat as leaderboards: the view's own ORDER BY isn't
+        // guaranteed to survive a query against it.
+        .order('category', { ascending: true })
+        .order('subgroup', { ascending: true, nullsFirst: true })
+        .order('sort_order', { ascending: true })
+        .order('name', { ascending: true }),
+      supabase.from('species_catalog').select('name, rarity, base_points, typical_weight, typical_length').eq('name', 'Other').maybeSingle(),
+    ]);
+    raise(pickerError);
+    raise(otherError);
+
+    const species = picker.map(mapRow);
+    if (other) species.push(mapRow(other)); // not in species_groups — always appended last, ungrouped
+
     return {
-      species: data.map((s) => ({
-        name: s.name, rarity: s.rarity, typicalWeight: s.typical_weight,
-        typicalLength: s.typical_length, basePoints: s.base_points,
-      })),
+      species,
       requirePhoto: false,
       maxBackdateDays: 7,
     };

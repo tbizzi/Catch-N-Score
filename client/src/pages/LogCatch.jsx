@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { useAuth } from '../auth.jsx';
 import { resizeImage, toLocalInput } from '../util.js';
 import { ScoreBadge } from '../components/CatchCard.jsx';
+import SpeciesPicker from '../components/SpeciesPicker.jsx';
 
 const emptyForm = () => ({ species: '', weight: '', length: '', caughtAt: toLocalInput(new Date()), location: '' });
 
@@ -101,16 +102,12 @@ export default function LogCatch() {
 
         <label>
           Species
-          <select value={form.species} onChange={set('species')} required>
-            <option value="" disabled>Choose a species…</option>
-            {['trophy', 'rare', 'uncommon', 'common'].map((tier) => (
-              <optgroup key={tier} label={tier[0].toUpperCase() + tier.slice(1)}>
-                {rules?.species.filter((s) => s.rarity === tier).map((s) => (
-                  <option key={s.name} value={s.name}>{s.name}</option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
+          <SpeciesPicker
+            id="species"
+            species={rules?.species ?? []}
+            value={form.species}
+            onChange={(name) => setForm((f) => ({ ...f, species: name }))}
+          />
           {species && (
             <span className="hint">
               {species.rarity} · {species.basePoints} base pts · typical {species.typicalWeight} lb / {species.typicalLength} in

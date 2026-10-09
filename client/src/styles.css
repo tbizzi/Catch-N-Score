@@ -180,6 +180,42 @@ input:focus, select:focus {
   background: var(--sky); border: 1px solid #c4dde6; min-height: 68px;
 }
 
+/* ── Species picker ─────────────────────────────────────── */
+.species-picker { position: relative; }
+.species-dropdown {
+  position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 30;
+  max-height: min(60vh, 420px); overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 6px 0;
+}
+.species-dropdown ul { list-style: none; margin: 0; padding: 0; }
+.species-group-label {
+  position: sticky; top: 0; z-index: 1; background: var(--forest); color: #fff;
+  font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em;
+  padding: 7px 14px;
+}
+.species-subgroup-label {
+  background: var(--mist); color: var(--muted); font-weight: 700; font-size: 0.78rem;
+  padding: 5px 14px;
+}
+.species-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 14px; min-height: 44px; cursor: pointer;
+  transition: background-color 0.1s var(--ease);
+}
+.species-row:hover, .species-row.selected { background: var(--sky); }
+.species-row-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.species-empty { padding: 16px; text-align: center; }
+
+.rarity-tag {
+  flex: none; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em;
+  padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+}
+.rarity-common { background: #e7ece8; color: var(--muted); }
+.rarity-uncommon { background: #e3f3e7; color: var(--pine); }
+.rarity-rare { background: #dcf0f5; color: var(--lake); }
+.rarity-trophy { background: #fdecc8; color: var(--gold-deep); }
+.rarity-legendary { background: #ece3fb; color: #6d28d9; }
+
 /* ── Catch cards ────────────────────────────────────────── */
 .catch-card {
   overflow: hidden;

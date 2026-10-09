@@ -49,14 +49,28 @@ history moves over automatically (`ON UPDATE CASCADE` on `catches.user_id`/`scor
 username-matching with no further proof of identity — fine for 2 people in a friends-only game, but worth
 knowing: whoever signs up first with that exact name inherits the history.
 
-## Changing the scoring
+## Species and scoring (temporary — see schema.sql's comment for the plan to replace it)
 
-The authoritative rules live in `supabase/schema.sql`: the `species` table (rarity tier, typical weight/length
-per species) and the `compute_score()`/`preview_score()` functions (base points per rarity, the weight/length
-bonus factors, the ratio cap). A trigger calls `compute_score()` when a catch is inserted and writes the
-`scores` row — the client never sends its own score, so there's nothing to recompute after an edit; existing
-catches keep whatever score they were given at insert time. `client/src/gameConfig.js` duplicates the
-non-scoring constants (backdating window, photo requirement) for UI purposes only — keep both in sync.
+Everything authoritative lives in `supabase/schema.sql`:
+- `rarity_points` — base points per tier (common/uncommon/rare/trophy/legendary). The one place to change a
+  whole tier's value at once; `species.rarity` just points at a row here, nothing stores points per-species.
+- `species` — one row per fish: rarity tier, typical weight/length (used for the size bonus), and
+  `picker_visible` (false only for the legacy generic "Sturgeon", kept for old catches but hidden from the
+  picker now that real sturgeon species exist).
+- `species_groups` — category/subgroup for the Log Catch picker. A species can be many rows here (Striped
+  Bass, King Mackerel, Spanish Mackerel and Blacktip Shark each appear under two groups) while staying one row
+  in `species` — `species_picker` is the view that joins these back together for the client.
+- `compute_score()`/`preview_score()` — base + weight bonus + length bonus, capped at 4x typical size. A
+  trigger calls `compute_score()` when a catch is inserted and writes the `scores` row — the client never
+  sends its own score, so there's nothing to recompute after an edit; existing catches keep whatever score
+  they were given at insert time, even after a species is renamed or its rarity/size changes.
+
+Renaming a species (e.g. the "Black Crappie" → "Crappie (Black)" migration) is an `UPDATE species SET name =
+...`, not a delete+insert — `catches.species`/`species_groups.species_name` both carry `ON UPDATE CASCADE`, so
+existing catches follow the rename automatically instead of needing their own migration.
+
+`client/src/gameConfig.js` duplicates the non-scoring constants (backdating window, photo requirement) for UI
+purposes only — keep both in sync.
 
 ## Migrating old data
 
@@ -81,5 +95,5 @@ client/src/
   auth.jsx             sign-up/login/logout, forgot/reset password
   api.js               all data access: catch_feed/weekly_leaderboard/alltime_leaderboard views + RPCs
   pages/               Feed, LogCatch, Leaderboard, Profile, AuthPage, ForgotPassword, ResetPassword
-  components/          Layout (top bar + mobile tab bar), CatchCard
+  components/          Layout (top bar + mobile tab bar), CatchCard, SpeciesPicker (searchable, grouped)
 ```
