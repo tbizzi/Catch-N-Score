@@ -12,8 +12,9 @@ function weekLabel(week) {
 }
 
 function Row({ row, isMe }) {
+  const tier = row.rank <= 3 ? ` top-${row.rank}` : '';
   return (
-    <li className={`lb-row${isMe ? ' me' : ''}`}>
+    <li className={`lb-row${tier}${isMe ? ' me' : ''}`}>
       <span className="lb-rank">{medals[row.rank] ?? row.rank}</span>
       <Link to={`/u/${row.username}`} className="lb-name">@{row.username}</Link>
       <span className="lb-catches muted small">{row.catches} {row.catches === 1 ? 'catch' : 'catches'}</span>
@@ -45,13 +46,13 @@ export default function Leaderboard() {
         <p className="muted">
           {kind === 'weekly' && data?.week
             ? `Week of ${weekLabel(data.week)} · resets Monday`
-            : kind === 'weekly' ? 'Resets every Monday' : 'Every catch, ever.'}
+            : kind === 'weekly' ? 'Resets every Monday' : 'Total points, every catch, forever.'}
         </p>
       </div>
 
       <div className="segmented" role="tablist">
-        <button role="tab" aria-selected={kind === 'weekly'} className={kind === 'weekly' ? 'active' : ''} onClick={() => setKind('weekly')}>This week</button>
-        <button role="tab" aria-selected={kind === 'alltime'} className={kind === 'alltime' ? 'active' : ''} onClick={() => setKind('alltime')}>All-time</button>
+        <button role="tab" aria-selected={kind === 'weekly'} className={kind === 'weekly' ? 'active' : ''} onClick={() => setKind('weekly')}>This Week</button>
+        <button role="tab" aria-selected={kind === 'alltime'} className={kind === 'alltime' ? 'active' : ''} onClick={() => setKind('alltime')}>Lifetime</button>
       </div>
 
       {error && <p className="error">{error}</p>}
