@@ -352,21 +352,43 @@ where not exists (select 1 from scores sc where sc.catch_id = c.id);
 -- guaranteed to survive a query against it, so callers should still specify
 -- .order() explicitly) ───────────────────────────────────────────────────────
 
+-- LEFT JOIN scores, not an inner join: every catch should stay visible even
+-- if it somehow has no scores row (this already happened once, for catches
+-- migrated before the scores table/trigger existed — see the backfill
+-- above). An inner join here would silently make such a catch disappear
+-- from the feed/profile despite the row still existing in catches.
 create or replace view catch_feed with (security_invoker = true) as
 select c.id, c.user_id, c.species, c.weight_lbs, c.length_in, c.caught_at, c.location,
-       c.photo_url, c.created_at, p.username, s.points, s.base, s.weight_bonus, s.length_bonus
+       c.photo_url, c.created_at, p.username,
+       coalesce(s.points, 0) as points, coalesce(s.base, 0) as base,
+       coalesce(s.weight_bonus, 0) as weight_bonus, coalesce(s.length_bonus, 0) as length_bonus
 from catches c
 join profiles p on p.id = c.user_id
-join scores s on s.catch_id = c.id;
+left join scores s on s.catch_id = c.id;
 
+-- Week boundaries: Monday 00:00 through the following Monday 00:00, America/New_York.
+-- Both ends are computed as plain (tz-less) timestamps first — "+7 days" on a
+-- naive timestamp is unambiguous calendar arithmetic — and each is converted
+-- to an instant via `at time zone` only once, independently, at the end.
+-- (An earlier version converted the start to a timestamptz and then added
+-- interval '7 days' to THAT — which uses the database session's timezone,
+-- not America/New_York, for the day arithmetic. That's a no-op most weeks,
+-- but is off by exactly one hour during the US DST-transition weeks, since
+-- the session timezone has no DST and New York's UTC offset does.)
 create or replace view weekly_leaderboard with (security_invoker = true) as
+with bounds as (
+  select
+    date_trunc('week', now() at time zone 'America/New_York') as week_start_local,
+    date_trunc('week', now() at time zone 'America/New_York') + interval '7 days' as week_end_local
+)
 select
   rank() over (order by sum(s.points) desc) as rank,
   p.id as user_id, p.username, sum(s.points)::int as points, count(*)::int as catches
 from scores s
 join profiles p on p.id = s.user_id
-where s.earned_at >= (date_trunc('week', now() at time zone 'America/New_York') at time zone 'America/New_York')
-  and s.earned_at <  (date_trunc('week', now() at time zone 'America/New_York') at time zone 'America/New_York') + interval '7 days'
+cross join bounds
+where s.earned_at >= (bounds.week_start_local at time zone 'America/New_York')
+  and s.earned_at <  (bounds.week_end_local at time zone 'America/New_York')
 group by p.id, p.username
 order by points desc, catches asc, p.username;
 

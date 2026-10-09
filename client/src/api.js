@@ -30,7 +30,14 @@ function pathFromPhotoUrl(url) {
   return i === -1 ? null : url.slice(i + marker.length);
 }
 
-async function orderedLeaderboard(view) {
+// Not async: it returns the query builder itself, un-awaited, so the caller
+// can chain .limit() onto it before the single await that actually executes
+// it. (The builder is thenable — Supabase executes a query when it's
+// awaited — so if this were async with no await inside, `await
+// orderedLeaderboard(view)` would already execute the query via the
+// returned value's own .then(), handing back a plain {data, error} result
+// with no .limit() method at all. That was the bug.)
+function orderedLeaderboard(view) {
   return supabase
     .from(view)
     .select('rank, user_id, username, points, catches')
@@ -130,7 +137,7 @@ export const api = {
    * their row can be included even if it falls outside the top 100. */
   async leaderboard(kind, myId) {
     const view = kind === 'weekly' ? 'weekly_leaderboard' : 'alltime_leaderboard';
-    const { data, error } = await (await orderedLeaderboard(view)).limit(100);
+    const { data, error } = await orderedLeaderboard(view).limit(100);
     raise(error);
     const rows = data.map((r) => ({ rank: r.rank, userId: r.user_id, username: r.username, points: r.points, catches: r.catches }));
 
